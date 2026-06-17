@@ -1,22 +1,21 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class MainMenuController : MonoBehaviour
 {
     [Header("Panels")]
     [SerializeField] private GameObject settingsPanel;
 
-    [Header("Scene Names")]
-    [SerializeField] private string firstGameSceneName = "PrototypeRoom";
+    [Header("Buttons")]
+    [SerializeField] private Button continueButton;
 
-    public void StartNewGame()
-    {
-        SceneManager.LoadScene(firstGameSceneName);
-    }
+    [Header("Scenes")]
+    [SerializeField] private string fallbackGameplaySceneName = "PrototypeRoom";
 
-    public void ContinueGame()
+    private void Start()
     {
-        Debug.Log("Continue is not implemented yet.");
+        UpdateContinueButtonState();
     }
 
     public void OpenSettings()
@@ -35,6 +34,27 @@ public class MainMenuController : MonoBehaviour
         }
     }
 
+    public void ContinueGame()
+    {
+        if (!GameSaveManager.HasSave())
+        {
+            Debug.Log("No save found.");
+            return;
+        }
+
+        string sceneToLoad = GameSaveManager.GetCurrentScene(fallbackGameplaySceneName);
+
+        if (!Application.CanStreamedLevelBeLoaded(sceneToLoad))
+        {
+            Debug.LogError(
+                "Cannot continue. Scene is missing from Build Settings: " + sceneToLoad
+            );
+            return;
+        }
+
+        SceneManager.LoadScene(sceneToLoad);
+    }
+
     public void QuitGame()
     {
         Debug.Log("Quit game requested.");
@@ -44,5 +64,13 @@ public class MainMenuController : MonoBehaviour
 #else
         Application.Quit();
 #endif
+    }
+
+    private void UpdateContinueButtonState()
+    {
+        if (continueButton != null)
+        {
+            continueButton.interactable = GameSaveManager.HasSave();
+        }
     }
 }
