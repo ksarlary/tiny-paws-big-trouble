@@ -1,0 +1,42 @@
+## Prompt Log — 11/06/2026 — Konovalova Sofia — S1
+- **Contexte** : analyse du cahier des charges et définition de la stack technique.
+- **Prompt** :
+> "Act like an expert tech lead in game development. I have a school project where I am supposed to develop a video game (metroidvania) entirerly with AI. Analyze the PDF precisely and acquire the context of the project and its rules/expectations. Then you need to help me to prepare a slide with Project description, mental map and AI usage log (picture 1). Picture 2 explains briefly the project and picture 3 is the bet of progress I have to make. I want a cute game with cats that will fight mice and birds. The main character (cat) is kidnapped by mice and birds and will need to find their way home. Possible endings: returned back home (good ending), becomes mice's slave (bad ending). I would like to use Unity but I don't know what stack we need to use. The AI will be the main actor of this development, since I don't know anything about game development. I will still be the main decision maker and will interrogate AI about its decisions forcing it to make better choices. Give me the full stack that you suggest with explanation for each choice and its pros and cons"
+
+- **Modèle & outil** : ChatGPT GPT-5.5
+- **Réponse / Output** : 
+> Game engine: Unity 2D
+Choice: Unity with the 2D toolset.
+Unity fits your project well because the school allows Unity, WebGL, mobile, desktop, Phaser, Godot, etc., and expects a playable mini-platformer with powers, PNJs, alternative endings, architecture, prompt logs, and a build. Unity is a safe choice because it has many tutorials, AI can generate Unity/C# scripts decently, and WebGL export lets you share the game easily. 
+Why Unity?
+For your project, Unity gives you:
+•	2D physics for platforming. 
+•	Scene system for levels. 
+•	Animator for cat/mouse/bird animations. 
+•	Tilemaps for Metroidvania maps. 
+•	WebGL export for school delivery. 
+•	Huge community and documentation. 
+•	Good compatibility with AI-generated C# scripts. 
+Pros
+•	Strong for 2D platformers
+Unity has built-in tools for collisions, rigidbodies, tilemaps, animations, cameras, and UI. For a Metroidvania, that is basically your survival kit.
+•	AI can help a lot
+ChatGPT/Copilot/Cursor can generate Unity scripts like PlayerMovement, DialogueManager, PowerUnlockSystem, EnemyAI, etc.
+•	Easy to show in demo
+You can build for WebGL and let teachers launch it in a browser. No “please install 37 things and pray to the driver gods” moment.
+•	Good for future portfolio
+A Unity project looks solid on a student portfolio.
+Cons
+•	Unity can feel heavy
+The editor is bigger and slower than something like Godot or Phaser.
+•	Beginner learning curve
+You will need to understand scenes, GameObjects, components, prefabs, scripts, inspectors, colliders, and animation states.
+•	WebGL builds can be annoying
+Sometimes WebGL has loading or performance issues, especially if the project gets too big.
+•	C# scripts can become messy
+If AI generates too much without structure, you can get spaghetti code with whiskers.
+
+- **Modifications manuelles** : aucune modification 
+- **Décision d'intégration** : accepté tel quel
+- **Qualité estimée de la réponse** : 5
+- **Hallucination détectée** : non

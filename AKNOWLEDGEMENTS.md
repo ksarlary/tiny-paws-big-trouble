@@ -1,0 +1,3 @@
+- **Graphic assets** generated with GPT-5.5
+- **Video** generated with PixVerse V6
+- **Musique**: musique libre de droit Pixabay
