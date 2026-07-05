@@ -1,52 +1,92 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public static class GameSaveManager
 {
-    private const string HasSaveKey = "HasSave";
-    private const string CurrentSceneKey = "CurrentScene";
-    private const string IntroSeenKey = "IntroSeen";
+    private const string FirstGameplayScene = "Room01_Prison";
 
     public static bool HasSave()
     {
-        return PlayerPrefs.GetInt(HasSaveKey, 0) == 1;
+        return SaveSystem.HasSave();
     }
 
-    public static void StartNewGame(string firstGameplaySceneName)
+    public static void StartNewGame()
     {
-        PlayerPrefs.SetInt(HasSaveKey, 1);
-        PlayerPrefs.SetString(CurrentSceneKey, firstGameplaySceneName);
-        PlayerPrefs.SetInt(IntroSeenKey, 0);
-        PlayerPrefs.Save();
+        SaveSystem.DeleteSave();
+    }
+
+    public static void StartNewGame(string firstScene)
+    {
+        SaveSystem.DeleteSave();
+
+        GameSaveData data = new GameSaveData
+        {
+            sceneName = firstScene,
+            introSeen = false,
+            hasPlayerState = false
+        };
+
+        SaveSystem.Save(data);
     }
 
     public static void MarkIntroSeen()
     {
-        PlayerPrefs.SetInt(IntroSeenKey, 1);
-        PlayerPrefs.Save();
+        GameSaveData data = LoadOrCreate();
+
+        data.introSeen = true;
+
+        SaveSystem.Save(data);
     }
 
-    public static bool HasSeenIntro()
+    public static string GetCurrentScene()
     {
-        return PlayerPrefs.GetInt(IntroSeenKey, 0) == 1;
+        GameSaveData data = SaveSystem.Load();
+
+        if (data == null || string.IsNullOrEmpty(data.sceneName))
+        {
+            return FirstGameplayScene;
+        }
+
+        return data.sceneName;
     }
 
-    public static string GetCurrentScene(string fallbackSceneName)
+    public static string GetCurrentScene(string fallbackScene)
     {
-        return PlayerPrefs.GetString(CurrentSceneKey, fallbackSceneName);
+        GameSaveData data = SaveSystem.Load();
+
+        if (data == null || string.IsNullOrEmpty(data.sceneName))
+        {
+            return fallbackScene;
+        }
+
+        return data.sceneName;
+    }
+
+    public static void SaveCurrentScene()
+    {
+        GameSaveData data = LoadOrCreate();
+
+        data.sceneName = SceneManager.GetActiveScene().name;
+
+        SaveSystem.Save(data);
     }
 
     public static void SaveCurrentScene(string sceneName)
     {
-        PlayerPrefs.SetInt(HasSaveKey, 1);
-        PlayerPrefs.SetString(CurrentSceneKey, sceneName);
-        PlayerPrefs.Save();
+        GameSaveData data = LoadOrCreate();
+
+        data.sceneName = sceneName;
+
+        SaveSystem.Save(data);
     }
 
     public static void DeleteSave()
     {
-        PlayerPrefs.DeleteKey(HasSaveKey);
-        PlayerPrefs.DeleteKey(CurrentSceneKey);
-        PlayerPrefs.DeleteKey(IntroSeenKey);
-        PlayerPrefs.Save();
+        SaveSystem.DeleteSave();
+    }
+
+    private static GameSaveData LoadOrCreate()
+    {
+        return SaveSystem.Load() ?? new GameSaveData();
     }
 }

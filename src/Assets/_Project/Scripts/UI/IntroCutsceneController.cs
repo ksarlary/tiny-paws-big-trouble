@@ -13,7 +13,7 @@ public class IntroCutsceneController : MonoBehaviour
     [SerializeField] private VideoPlayer videoPlayer;
 
     [Header("Scenes")]
-    [SerializeField] private string nextSceneName = "PrototypeRoom";
+    [SerializeField] private string nextSceneName = "Room01_Prison";
 
     [Header("Timing")]
     [SerializeField] private float logoFadeDuration = 2.0f;

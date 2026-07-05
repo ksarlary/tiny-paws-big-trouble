@@ -493,7 +493,7 @@ MonoBehaviour:
   logoGroup: {fileID: 1684880556}
   firstFrameGroup: {fileID: 1801722050}
   videoPlayer: {fileID: 545215716}
-  nextSceneName: PrototypeRoom
+  nextSceneName: Room01_Prison
   logoFadeDuration: 2
   firstFrameHoldDuration: 0.4
   firstFrameFadeOutDuration: 0.5
