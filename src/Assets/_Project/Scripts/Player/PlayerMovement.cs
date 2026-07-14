@@ -35,10 +35,21 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        if (PauseMenuController.IsPaused ||
+            MemoryUIController.IsMemoryOpen)
+        {
+            horizontalInput = 0f;
+            jumpRequested = false;
+
+            UpdateAnimator();
+            return;
+        }
+
         ReadMovementInput();
         ReadJumpInput();
-        UpdateAnimator();
+
         UpdateFacingDirection();
+        UpdateAnimator();
     }
 
     private void UpdateAnimator()
@@ -98,6 +109,11 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (PauseMenuController.IsPaused)
+        {
+            return;
+        }
+
         rb.linearVelocity = new Vector2(
             horizontalInput * moveSpeed,
             rb.linearVelocity.y
