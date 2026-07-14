@@ -1,84 +1,208 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[RequireComponent(typeof(Rigidbody2D))]
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement")]
-    [SerializeField] private float moveSpeed = 6f;
+    [SerializeField] private float moveSpeed = 5f;
 
     [Header("Jump")]
-    [SerializeField] private float jumpForce = 11f;
+    [SerializeField] private float jumpForce = 10f;
+    [SerializeField] private PlayerAbilities playerAbilities;
 
     [Header("Ground Check")]
     [SerializeField] private Transform groundCheck;
-    [SerializeField] private float groundCheckRadius = 0.2f;
+    [SerializeField] private float groundCheckRadius = 0.18f;
     [SerializeField] private LayerMask groundLayer;
 
-    [SerializeField] private Animator animator;
+    [Header("Visual")]
     [SerializeField] private Transform visual;
 
-    [Header("Audio")]
-    [SerializeField] private AudioSource sfxAudioSource;
-    [SerializeField] private AudioClip landingClip;
+    [Header("Animation")]
+    [SerializeField] private Animator animator;
 
     private Rigidbody2D rb;
+
     private float horizontalInput;
     private bool jumpRequested;
-
+    private bool isGrounded;
     private bool wasGrounded;
+    private bool hasUsedDoubleJump;
+
+    private static readonly int SpeedHash = Animator.StringToHash("Speed");
+    private static readonly int IsGroundedHash = Animator.StringToHash("IsGrounded");
+    private static readonly int VerticalVelocityHash = Animator.StringToHash("VerticalVelocity");
+    private static readonly int JumpHash = Animator.StringToHash("Jump");
+    private static readonly int LandHash = Animator.StringToHash("Land");
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+
+        if (animator == null)
+        {
+            animator = GetComponentInChildren<Animator>();
+        }
+
+        if (playerAbilities == null)
+        {
+            playerAbilities = GetComponent<PlayerAbilities>();
+        }
     }
 
     private void Update()
     {
-        if (PauseMenuController.IsPaused ||
-            MemoryUIController.IsMemoryOpen)
-        {
-            horizontalInput = 0f;
-            jumpRequested = false;
-
-            UpdateAnimator();
-            return;
-        }
-
-        ReadMovementInput();
-        ReadJumpInput();
-
+        ReadInput();
+        UpdateGroundedState();
         UpdateFacingDirection();
         UpdateAnimator();
     }
 
-    private void UpdateAnimator()
+    private void FixedUpdate()
     {
-        bool grounded = IsGrounded();
-
-        if (animator != null)
-        {
-            animator.SetFloat("Speed", Mathf.Abs(horizontalInput));
-            animator.SetFloat("VerticalVelocity", rb.linearVelocity.y);
-            animator.SetBool("IsGrounded", grounded);
-        }
-
-        if (!wasGrounded && grounded)
-        {
-            PlayLandingSound();
-        }
-
-        wasGrounded = grounded;
+        Move();
+        HandleJump();
     }
 
-    private void PlayLandingSound()
+    private void ReadInput()
     {
-        if (sfxAudioSource == null || landingClip == null)
+        if (Keyboard.current == null)
+        {
+            horizontalInput = 0f;
+            jumpRequested = false;
+            return;
+        }
+
+        if (PauseMenuController.IsPaused ||
+    MemoryUIController.IsMemoryOpen ||
+    DialogueUIController.IsDialogueOpen)
+        {
+            horizontalInput = 0f;
+            jumpRequested = false;
+            return;
+        }
+
+        horizontalInput = 0f;
+
+        if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed)
+        {
+            horizontalInput = -1f;
+        }
+        else if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed)
+        {
+            horizontalInput = 1f;
+        }
+
+        if (Keyboard.current.spaceKey.wasPressedThisFrame)
+        {
+            jumpRequested = true;
+        }
+    }
+
+    private void Move()
+    {
+        if (rb == null)
         {
             return;
         }
 
-        sfxAudioSource.PlayOneShot(landingClip);
+        rb.linearVelocity = new Vector2(
+            horizontalInput * moveSpeed,
+            rb.linearVelocity.y
+        );
+    }
+
+    private void HandleJump()
+    {
+        if (!jumpRequested)
+        {
+            return;
+        }
+
+        jumpRequested = false;
+
+        if (rb == null)
+        {
+            return;
+        }
+
+        if (isGrounded)
+        {
+            PerformJump();
+            hasUsedDoubleJump = false;
+            return;
+        }
+
+        if (CanDoubleJump())
+        {
+            PerformJump();
+            hasUsedDoubleJump = true;
+        }
+    }
+
+    private bool CanDoubleJump()
+    {
+        if (playerAbilities == null)
+        {
+            return false;
+        }
+
+        if (!playerAbilities.HasDoubleJump)
+        {
+            return false;
+        }
+
+        if (hasUsedDoubleJump)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private void PerformJump()
+    {
+        rb.linearVelocity = new Vector2(
+            rb.linearVelocity.x,
+            jumpForce
+        );
+
+        if (animator != null)
+        {
+            animator.ResetTrigger(JumpHash);
+            animator.SetTrigger(JumpHash);
+        }
+    }
+
+    private void UpdateGroundedState()
+    {
+        wasGrounded = isGrounded;
+
+        if (groundCheck == null)
+        {
+            isGrounded = false;
+            return;
+        }
+
+        isGrounded = Physics2D.OverlapCircle(
+            groundCheck.position,
+            groundCheckRadius,
+            groundLayer
+        );
+
+        if (isGrounded)
+        {
+            hasUsedDoubleJump = false;
+        }
+
+        if (!wasGrounded && isGrounded)
+        {
+            if (animator != null)
+            {
+                animator.ResetTrigger(LandHash);
+                animator.SetTrigger(LandHash);
+            }
+        }
     }
 
     private void UpdateFacingDirection()
@@ -88,96 +212,40 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        Vector3 scale = visual.localScale;
-
-        if (horizontalInput > 0f)
+        if (horizontalInput > 0.01f)
         {
+            Vector3 scale = visual.localScale;
             scale.x = Mathf.Abs(scale.x);
+            visual.localScale = scale;
         }
-        else if (horizontalInput < 0f)
+        else if (horizontalInput < -0.01f)
         {
+            Vector3 scale = visual.localScale;
             scale.x = -Mathf.Abs(scale.x);
+            visual.localScale = scale;
         }
-
-        visual.localScale = scale;
     }
 
-    private void Start()
+    private void UpdateAnimator()
     {
-        wasGrounded = IsGrounded();
-    }
-
-    private void FixedUpdate()
-    {
-        if (PauseMenuController.IsPaused)
+        if (animator == null || rb == null)
         {
             return;
         }
 
-        rb.linearVelocity = new Vector2(
-            horizontalInput * moveSpeed,
-            rb.linearVelocity.y
+        animator.SetFloat(
+            SpeedHash,
+            Mathf.Abs(horizontalInput)
         );
 
-        if (jumpRequested)
-        {
-            rb.linearVelocity = new Vector2(
-                rb.linearVelocity.x,
-                jumpForce
-            );
+        animator.SetBool(
+            IsGroundedHash,
+            isGrounded
+        );
 
-            jumpRequested = false;
-        }
-    }
-
-    private void ReadMovementInput()
-    {
-        horizontalInput = 0f;
-
-        Keyboard keyboard = Keyboard.current;
-
-        if (keyboard == null)
-        {
-            return;
-        }
-
-        if (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed)
-        {
-            horizontalInput -= 1f;
-        }
-
-        if (keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed)
-        {
-            horizontalInput += 1f;
-        }
-    }
-
-    private void ReadJumpInput()
-    {
-        Keyboard keyboard = Keyboard.current;
-
-        if (keyboard == null)
-        {
-            return;
-        }
-
-        if (keyboard.spaceKey.wasPressedThisFrame && IsGrounded())
-        {
-            jumpRequested = true;
-        }
-    }
-
-    private bool IsGrounded()
-    {
-        if (groundCheck == null)
-        {
-            return false;
-        }
-
-        return Physics2D.OverlapCircle(
-            groundCheck.position,
-            groundCheckRadius,
-            groundLayer
+        animator.SetFloat(
+            VerticalVelocityHash,
+            rb.linearVelocity.y
         );
     }
 
@@ -187,6 +255,8 @@ public class PlayerMovement : MonoBehaviour
         {
             return;
         }
+
+        Gizmos.color = Color.yellow;
 
         Gizmos.DrawWireSphere(
             groundCheck.position,

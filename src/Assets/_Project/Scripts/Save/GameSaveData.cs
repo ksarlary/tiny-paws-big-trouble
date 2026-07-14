@@ -26,4 +26,9 @@ public class GameSaveData
     public bool hasCheckpoint;
     public string checkpointSceneName;
     public string checkpointEntryPointId;
+
+    public bool room03KeyCollected;
+    public bool room03KeyDropped;
+
+    public bool hasDoubleJump;
 }

@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using UnityEngine;
 
@@ -6,7 +7,10 @@ public static class SaveSystem
     private const string SaveFileName = "save.json";
 
     private static string SavePath =>
-        Path.Combine(Application.persistentDataPath, SaveFileName);
+        Path.Combine(
+            Application.persistentDataPath,
+            SaveFileName
+        );
 
     public static bool HasSave()
     {
@@ -17,34 +21,94 @@ public static class SaveSystem
     {
         if (data == null)
         {
-            Debug.LogError("SaveSystem: Cannot save null data.");
+            Debug.LogWarning("SaveSystem: Tried to save null data.");
             return;
         }
 
-        string json = JsonUtility.ToJson(data, true);
+        try
+        {
+            string json = JsonUtility.ToJson(
+                data,
+                true
+            );
 
-        File.WriteAllText(SavePath, json);
+            File.WriteAllText(
+                SavePath,
+                json
+            );
 
-        Debug.Log($"Game saved: {SavePath}");
+            Debug.Log($"SaveSystem: Game saved to {SavePath}");
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError(
+                $"SaveSystem: Failed to save game. {exception.Message}"
+            );
+        }
     }
 
     public static GameSaveData Load()
     {
-        if (!HasSave())
+        if (!File.Exists(SavePath))
         {
             return null;
         }
 
-        string json = File.ReadAllText(SavePath);
+        try
+        {
+            string json = File.ReadAllText(SavePath);
 
-        return JsonUtility.FromJson<GameSaveData>(json);
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                Debug.LogWarning(
+                    "SaveSystem: Save file exists but is empty. Deleting corrupted save."
+                );
+
+                DeleteSave();
+                return null;
+            }
+
+            GameSaveData data =
+                JsonUtility.FromJson<GameSaveData>(json);
+
+            if (data == null)
+            {
+                Debug.LogWarning(
+                    "SaveSystem: Save file could not be parsed. Deleting corrupted save."
+                );
+
+                DeleteSave();
+                return null;
+            }
+
+            return data;
+        }
+        catch (Exception exception)
+        {
+            Debug.LogWarning(
+                $"SaveSystem: Failed to load save. Deleting corrupted save. {exception.Message}"
+            );
+
+            DeleteSave();
+            return null;
+        }
     }
 
     public static void DeleteSave()
     {
-        if (HasSave())
+        try
         {
-            File.Delete(SavePath);
+            if (File.Exists(SavePath))
+            {
+                File.Delete(SavePath);
+                Debug.Log("SaveSystem: Save deleted.");
+            }
+        }
+        catch (Exception exception)
+        {
+            Debug.LogError(
+                $"SaveSystem: Failed to delete save. {exception.Message}"
+            );
         }
     }
 }

@@ -17,17 +17,16 @@ public class CheckpointBasket : MonoBehaviour
 
     [Header("Messages")]
     [SerializeField] private string interactionMessage = "Press E to cat nap";
-    [SerializeField] private string restMessage =
-        "A peaceful nap restores your strength...";
-
+    [SerializeField] private string restMessage = "A peaceful nap restores your strength...";
     [SerializeField] private float restMessageDuration = 1.5f;
 
     private bool playerNearby;
     private bool isResting;
+    private Coroutine restCoroutine;
 
     private void Update()
     {
-        if (!playerNearby || isResting)
+        if (!playerNearby)
         {
             return;
         }
@@ -39,40 +38,59 @@ public class CheckpointBasket : MonoBehaviour
 
         if (Keyboard.current.eKey.wasPressedThisFrame)
         {
-            StartCoroutine(RestRoutine());
+            TryRest();
         }
+    }
+
+    private void TryRest()
+    {
+        if (isResting)
+        {
+            return;
+        }
+
+        if (restCoroutine != null)
+        {
+            StopCoroutine(restCoroutine);
+        }
+
+        restCoroutine = StartCoroutine(RestRoutine());
     }
 
     private IEnumerator RestRoutine()
     {
         isResting = true;
 
-        // Restore Player health.
+        Debug.Log("BASKET REST STARTED");
+
         if (playerHealth != null)
         {
             playerHealth.HealFull();
         }
         else
         {
-            Debug.LogError(
+            Debug.LogWarning(
                 "CheckpointBasket: PlayerHealth is not assigned.",
                 this
             );
         }
 
-        // Respawn all room enemies.
         if (enemyRespawnManager != null)
         {
             enemyRespawnManager.RespawnAllEnemies();
         }
+        else
+        {
+            Debug.LogWarning(
+                "CheckpointBasket: EnemyRespawnManager is not assigned.",
+                this
+            );
+        }
 
-        // Save checkpoint.
         GameSaveManager.ActivateCheckpoint(
             SceneManager.GetActiveScene().name,
             checkpointEntryPointId,
-            playerHealth != null
-                ? playerHealth.MaxHealth
-                : 4
+            playerHealth != null ? playerHealth.MaxHealth : 4
         );
 
         Debug.Log(
@@ -81,7 +99,6 @@ public class CheckpointBasket : MonoBehaviour
             $"Entry: {checkpointEntryPointId}"
         );
 
-        // Show rest message.
         if (tutorialUI != null)
         {
             tutorialUI.ShowMessage(
@@ -90,17 +107,16 @@ public class CheckpointBasket : MonoBehaviour
             );
         }
 
-        yield return new WaitForSecondsRealtime(
-            restMessageDuration
-        );
+        yield return new WaitForSecondsRealtime(restMessageDuration);
 
         isResting = false;
+        restCoroutine = null;
+
+        Debug.Log("BASKET REST FINISHED - CAN REST AGAIN");
 
         if (playerNearby && tutorialUI != null)
         {
-            tutorialUI.ShowMessage(
-                interactionMessage
-            );
+            tutorialUI.ShowMessage(interactionMessage);
         }
     }
 
@@ -113,11 +129,9 @@ public class CheckpointBasket : MonoBehaviour
 
         playerNearby = true;
 
-        if (tutorialUI != null)
+        if (!isResting && tutorialUI != null)
         {
-            tutorialUI.ShowMessage(
-                interactionMessage
-            );
+            tutorialUI.ShowMessage(interactionMessage);
         }
     }
 

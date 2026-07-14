@@ -3,21 +3,24 @@ using UnityEngine;
 
 public class EnemyRespawnManager : MonoBehaviour
 {
-    public event Action EnemiesRespawned;
+    [SerializeField] private EnemyRespawnable[] enemies;
 
-    [SerializeField]
-    private EnemyRespawnable[] enemies;
+    public event Action EnemiesRespawned;
 
     public void RespawnAllEnemies()
     {
         foreach (EnemyRespawnable enemy in enemies)
         {
-            if (enemy != null)
+            if (enemy == null)
             {
-                enemy.Respawn();
+                continue;
             }
+
+            enemy.Respawn();
         }
 
         EnemiesRespawned?.Invoke();
+
+        Debug.Log("All enemies respawned.");
     }
 }

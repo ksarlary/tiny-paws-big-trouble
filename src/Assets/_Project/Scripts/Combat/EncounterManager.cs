@@ -2,37 +2,63 @@ using UnityEngine;
 
 public class EncounterManager : MonoBehaviour
 {
-    [SerializeField] private EnemyHealth[] requiredEnemies;
+    [Header("Enemies")]
+    [SerializeField] private EnemyHealth[] enemies;
 
-    [Header("Exit")]
+    [Header("Exit Lock")]
     [SerializeField] private GameObject exitBlocker;
-    [SerializeField] private Animator exitDoorAnimator;
 
     [Header("Respawn")]
-    [SerializeField] private EnemyRespawnManager respawnManager;
+    [SerializeField] private EnemyRespawnManager enemyRespawnManager;
 
-    private int remainingEnemies;
+    private int defeatedEnemyCount;
+
+    private void OnEnable()
+    {
+        foreach (EnemyHealth enemy in enemies)
+        {
+            if (enemy != null)
+            {
+                enemy.Died += OnEnemyDied;
+            }
+        }
+
+        if (enemyRespawnManager != null)
+        {
+            enemyRespawnManager.EnemiesRespawned += ResetEncounter;
+        }
+    }
+
+    private void OnDisable()
+    {
+        foreach (EnemyHealth enemy in enemies)
+        {
+            if (enemy != null)
+            {
+                enemy.Died -= OnEnemyDied;
+            }
+        }
+
+        if (enemyRespawnManager != null)
+        {
+            enemyRespawnManager.EnemiesRespawned -= ResetEncounter;
+        }
+    }
 
     private void Start()
     {
-        foreach (EnemyHealth enemy in requiredEnemies)
-        {
-            enemy.Died += OnEnemyDied;
-        }
-
-        if (respawnManager != null)
-        {
-            respawnManager.EnemiesRespawned += ResetEncounter;
-        }
-
         ResetEncounter();
     }
 
-    private void OnEnemyDied(EnemyHealth enemy)
+    private void OnEnemyDied()
     {
-        remainingEnemies--;
+        defeatedEnemyCount++;
 
-        if (remainingEnemies <= 0)
+        Debug.Log(
+            $"Encounter enemy defeated: {defeatedEnemyCount}/{enemies.Length}"
+        );
+
+        if (defeatedEnemyCount >= enemies.Length)
         {
             UnlockExit();
         }
@@ -40,17 +66,14 @@ public class EncounterManager : MonoBehaviour
 
     private void ResetEncounter()
     {
-        remainingEnemies = requiredEnemies.Length;
+        defeatedEnemyCount = 0;
 
         if (exitBlocker != null)
         {
             exitBlocker.SetActive(true);
         }
 
-        if (exitDoorAnimator != null)
-        {
-            exitDoorAnimator.SetBool("Open", false);
-        }
+        Debug.Log("Encounter reset. Exit locked.");
     }
 
     private void UnlockExit()
@@ -60,9 +83,6 @@ public class EncounterManager : MonoBehaviour
             exitBlocker.SetActive(false);
         }
 
-        if (exitDoorAnimator != null)
-        {
-            exitDoorAnimator.SetBool("Open", true);
-        }
+        Debug.Log("Encounter complete. Exit unlocked.");
     }
 }

@@ -19,19 +19,29 @@ public class EnemyRespawnable : MonoBehaviour
 
     public void Respawn()
     {
+        Debug.Log($"{name} respawn requested.");
+
         transform.position = spawnPosition;
         transform.rotation = spawnRotation;
-
-        gameObject.SetActive(true);
 
         if (rb != null)
         {
             rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0f;
         }
 
         if (enemyHealth != null)
         {
             enemyHealth.ResetHealth();
         }
+        else
+        {
+            Debug.LogWarning(
+                $"{name}: EnemyHealth missing during respawn.",
+                this
+            );
+        }
+
+        Debug.Log($"{name} respawned at {spawnPosition}.");
     }
 }

@@ -407,6 +407,32 @@ public class MouseGuardAI : MonoBehaviour
         );
     }
 
+    public void ResetAI()
+    {
+        spawnPosition = transform.position;
+
+        isAttacking = false;
+        isStunned = false;
+
+        nextAttackTime = 0f;
+        stunEndTime = 0f;
+
+        currentState = State.Patrol;
+
+        FindPlayer();
+
+        StopHorizontalMovement();
+
+        if (animator != null)
+        {
+            animator.ResetTrigger(AttackHash);
+            animator.Rebind();
+            animator.Update(0f);
+        }
+
+        Debug.Log($"{name} AI reset.");
+    }
+
     private void OnDrawGizmosSelected()
     {
         Vector3 center =

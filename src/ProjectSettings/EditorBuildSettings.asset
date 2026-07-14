@@ -23,8 +23,14 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Project/Scenes/Room02_UndergroundCorridor.unity
     guid: 065d08cf5ded07846b32bdd0adc65e14
+  - enabled: 0
+    path: Assets/_Project/Scenes/Room03_FirstCombat_old.unity
+    guid: 0fd82e7ed2e19be4499a0b0a6a3a91b9
   - enabled: 1
     path: Assets/_Project/Scenes/Room03_FirstCombat.unity
-    guid: 0fd82e7ed2e19be4499a0b0a6a3a91b9
+    guid: 5e1c290a73c2a7e44b13fa142664db8e
+  - enabled: 1
+    path: Assets/_Project/Scenes/Room04_OldCatShelter.unity
+    guid: 8eccb4d0611a1c344a537e99861eb04b
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
