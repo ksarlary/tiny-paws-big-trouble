@@ -4,17 +4,22 @@ public static class SceneTransitionContext
 
     public static bool SpawnedFromEntryPoint { get; set; }
 
-    public static bool HasPendingEntryPoint =>
-        !string.IsNullOrEmpty(EntryPointId);
-
-    public static void ClearEntryPoint()
+    public static bool UseEntryPointOnLoad
     {
-        EntryPointId = null;
+        get
+        {
+            return !string.IsNullOrEmpty(EntryPointId) || SpawnedFromEntryPoint;
+        }
     }
 
-    public static void ClearAll()
+    public static void Clear()
     {
         EntryPointId = null;
         SpawnedFromEntryPoint = false;
+    }
+
+    public static void ClearEntryPoint()
+    {
+        Clear();
     }
 }

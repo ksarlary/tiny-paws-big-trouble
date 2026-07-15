@@ -13,8 +13,6 @@ public class DialogueUIController : MonoBehaviour
     [SerializeField] private TMP_Text dialogueText;
     [SerializeField] private TMP_Text continueHintText;
 
-    [SerializeField] private CanvasGroup dialogueCanvasGroup;
-
     [Header("Input")]
     [SerializeField] private float inputCooldown = 0.2f;
 
@@ -22,6 +20,8 @@ public class DialogueUIController : MonoBehaviour
     private int currentIndex;
     private Action onDialogueFinished;
     private float nextAllowedInputTime;
+
+    private bool forceCloseOnNextInput;
 
     private void Awake()
     {
@@ -51,7 +51,7 @@ public class DialogueUIController : MonoBehaviour
             Keyboard.current.numpadEnterKey.wasPressedThisFrame)
         {
             nextAllowedInputTime = Time.unscaledTime + inputCooldown;
-            ShowNextLine();
+            ShowNextLineOrClose();
         }
     }
 
@@ -71,6 +71,8 @@ public class DialogueUIController : MonoBehaviour
             return;
         }
 
+        forceCloseOnNextInput = false;
+
         currentLines = lines;
         currentIndex = 0;
         onDialogueFinished = onFinished;
@@ -83,10 +85,6 @@ public class DialogueUIController : MonoBehaviour
         if (dialogueRoot != null)
         {
             dialogueRoot.SetActive(true);
-            if (dialogueCanvasGroup != null)
-            {
-                dialogueCanvasGroup.alpha = 1f;
-            }
         }
 
         if (speakerNameText != null)
@@ -96,7 +94,53 @@ public class DialogueUIController : MonoBehaviour
 
         if (continueHintText != null)
         {
-            continueHintText.text = "Press E to continue";
+            continueHintText.text = lines.Length <= 1
+                ? "Press E to close"
+                : "Press E to continue";
+        }
+
+        ShowCurrentLine();
+    }
+
+    public void StartSingleLineDialogue(
+        string speakerName,
+        string line,
+        Action onFinished = null)
+    {
+        if (IsDialogueOpen)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(line))
+        {
+            line = "...";
+        }
+
+        forceCloseOnNextInput = true;
+
+        currentLines = new[] { line };
+        currentIndex = 0;
+        onDialogueFinished = onFinished;
+
+        IsDialogueOpen = true;
+        Time.timeScale = 0f;
+
+        nextAllowedInputTime = Time.unscaledTime + inputCooldown;
+
+        if (dialogueRoot != null)
+        {
+            dialogueRoot.SetActive(true);
+        }
+
+        if (speakerNameText != null)
+        {
+            speakerNameText.text = speakerName;
+        }
+
+        if (continueHintText != null)
+        {
+            continueHintText.text = "Press E to close";
         }
 
         ShowCurrentLine();
@@ -122,8 +166,14 @@ public class DialogueUIController : MonoBehaviour
         dialogueText.text = currentLines[currentIndex];
     }
 
-    private void ShowNextLine()
+    private void ShowNextLineOrClose()
     {
+        if (forceCloseOnNextInput)
+        {
+            EndDialogue();
+            return;
+        }
+
         currentIndex++;
 
         if (currentIndex >= currentLines.Length)
@@ -150,6 +200,8 @@ public class DialogueUIController : MonoBehaviour
     {
         IsDialogueOpen = false;
         Time.timeScale = 1f;
+
+        forceCloseOnNextInput = false;
 
         if (dialogueRoot != null)
         {

@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class KeyPickup : MonoBehaviour
 {
+    public static bool Room03KeyExistsInScene { get; private set; }
+
     [Header("UI")]
     [SerializeField] private TutorialUIController tutorialUI;
 
@@ -12,6 +14,27 @@ public class KeyPickup : MonoBehaviour
     [SerializeField] private float messageDuration = 2.5f;
 
     private bool collected;
+
+    private void OnEnable()
+    {
+        Room03KeyExistsInScene = true;
+    }
+
+    private void OnDisable()
+    {
+        if (!collected)
+        {
+            Room03KeyExistsInScene = false;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (!collected)
+        {
+            Room03KeyExistsInScene = false;
+        }
+    }
 
     public void SetTutorialUI(TutorialUIController ui)
     {
@@ -48,6 +71,8 @@ public class KeyPickup : MonoBehaviour
                 this
             );
         }
+
+        Room03KeyExistsInScene = false;
 
         Debug.Log("Player picked up Room 3 key.");
 

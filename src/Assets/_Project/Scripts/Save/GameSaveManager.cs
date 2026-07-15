@@ -147,19 +147,6 @@ public static class GameSaveManager
         return data.room03KeyCollected;
     }
 
-    public static bool WasRoom03KeyDropped()
-    {
-        GameSaveData data = LoadOrCreate();
-        return data.room03KeyDropped;
-    }
-
-    public static void MarkRoom03KeyDropped()
-    {
-        GameSaveData data = LoadOrCreate();
-        data.room03KeyDropped = true;
-        SaveSystem.Save(data);
-    }
-
     public static void CollectRoom03Key()
     {
         GameSaveData data = LoadOrCreate();

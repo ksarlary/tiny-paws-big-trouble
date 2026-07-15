@@ -23,6 +23,12 @@ public class PlayerAttack : MonoBehaviour
     [Header("Facing")]
     [SerializeField] private float attackPointOffsetX = 0.8f;
 
+
+    [Header("Audio")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip attackSound;
+    [SerializeField] private float attackSoundVolume = 1f;
+
     private static readonly int AttackHash =
         Animator.StringToHash("Attack");
 
@@ -50,6 +56,13 @@ public class PlayerAttack : MonoBehaviour
 
     private bool CanAttack()
     {
+
+        if (DialogueUIController.IsDialogueOpen ||
+    DialogueManager.IsDialogueBusy)
+        {
+            return false;
+        }
+
         if (Mouse.current == null)
         {
             return false;
@@ -128,11 +141,25 @@ public class PlayerAttack : MonoBehaviour
         attackRoutine = StartCoroutine(AttackRoutine());
     }
 
+    private void PlayAttackSound()
+    {
+        if (audioSource == null || attackSound == null)
+        {
+            return;
+        }
+
+        audioSource.PlayOneShot(
+            attackSound,
+            attackSoundVolume
+        );
+    }
+
     private IEnumerator AttackRoutine()
     {
         isAttacking = true;
         canAttack = false;
 
+        PlayAttackSound();
         if (playerAnimator != null)
         {
             playerAnimator.ResetTrigger(AttackHash);
@@ -233,6 +260,14 @@ public class PlayerAttack : MonoBehaviour
     public void FinishAttack()
     {
         Debug.Log("PLAYER ATTACK FINISH EVENT RECEIVED");
+    }
+
+    private void Awake()
+    {
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+        }
     }
 
     private void OnDrawGizmosSelected()

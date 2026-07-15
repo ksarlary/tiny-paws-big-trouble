@@ -20,9 +20,22 @@ public class CheckpointBasket : MonoBehaviour
     [SerializeField] private string restMessage = "A peaceful nap restores your strength...";
     [SerializeField] private float restMessageDuration = 1.5f;
 
+    [Header("Audio")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip restSound;
+    [SerializeField] private float restSoundVolume = 1f;
+
     private bool playerNearby;
     private bool isResting;
     private Coroutine restCoroutine;
+
+    private void Awake()
+    {
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+        }
+    }
 
     private void Update()
     {
@@ -60,7 +73,7 @@ public class CheckpointBasket : MonoBehaviour
     private IEnumerator RestRoutine()
     {
         isResting = true;
-
+        PlayRestSound();
         Debug.Log("BASKET REST STARTED");
 
         if (playerHealth != null)
@@ -118,6 +131,19 @@ public class CheckpointBasket : MonoBehaviour
         {
             tutorialUI.ShowMessage(interactionMessage);
         }
+    }
+
+    private void PlayRestSound()
+    {
+        if (audioSource == null || restSound == null)
+        {
+            return;
+        }
+
+        audioSource.PlayOneShot(
+            restSound,
+            restSoundVolume
+        );
     }
 
     private void OnTriggerEnter2D(Collider2D other)

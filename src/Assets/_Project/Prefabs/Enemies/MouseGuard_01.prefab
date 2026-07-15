@@ -171,6 +171,8 @@ GameObject:
   - component: {fileID: 3949448359658326225}
   - component: {fileID: 2430070886892725848}
   - component: {fileID: 8382103330631635274}
+  - component: {fileID: 2216708246824715340}
+  - component: {fileID: 281286685087417570}
   m_Layer: 8
   m_Name: MouseGuard_01
   m_TagString: Untagged
@@ -297,7 +299,7 @@ MonoBehaviour:
   attackPoint: {fileID: 8947614323059169948}
   animator: {fileID: 5686427450094566754}
   patrolSpeed: 1
-  patrolDistance: 2
+  patrolDistance: 1.5
   detectionRange: 5
   losePlayerRange: 7
   chaseSpeed: 1.5
@@ -308,6 +310,9 @@ MonoBehaviour:
   playerLayer:
     serializedVersion: 2
     m_Bits: 8
+  audioSource: {fileID: 2216708246824715340}
+  attackSound: {fileID: 8300000, guid: af4aec6e8e0764a4aaf03c1fd25a6006, type: 3}
+  attackSoundVolume: 0.8
   spriteFacesRightByDefault: 1
 --- !u!212 &3949448359658326225
 SpriteRenderer:
@@ -403,3 +408,116 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ec5da6ef67ef57f4e99abf6465b04cd8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyRespawnable
+--- !u!82 &2216708246824715340
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7109336513853265050}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: -2995413613645069312, guid: 1071ef20646ed7b49bb917a2ffdc1cd8, type: 2}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 0}
+  m_PlayOnAwake: 0
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!114 &281286685087417570
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7109336513853265050}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8456bec8b0fe4f045bd261d2421ab271, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyKeyDropper
+  enemyHealth: {fileID: 2430070886892725848}
+  keyPrefab: {fileID: 204084368421316693, guid: 13f100ad332ea6d4e8da034134928966, type: 3}
+  tutorialUI: {fileID: 0}
+  dropOffset: {x: 0, y: 0.6, z: 0}

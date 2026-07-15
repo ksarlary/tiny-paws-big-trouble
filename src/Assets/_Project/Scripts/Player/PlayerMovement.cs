@@ -21,6 +21,13 @@ public class PlayerMovement : MonoBehaviour
     [Header("Animation")]
     [SerializeField] private Animator animator;
 
+    [Header("Audio")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip landingSound;
+    [SerializeField] private float landingSoundVolume = 0.7f;
+    [SerializeField] private float minimumLandingSpeed = 2f;
+    [SerializeField] private float landingSoundStartDelay = 0.2f;
+
     private Rigidbody2D rb;
 
     private float horizontalInput;
@@ -28,6 +35,9 @@ public class PlayerMovement : MonoBehaviour
     private bool isGrounded;
     private bool wasGrounded;
     private bool hasUsedDoubleJump;
+
+    private bool hasBeenAirborne;
+    private float highestFallSpeed;
 
     private static readonly int SpeedHash = Animator.StringToHash("Speed");
     private static readonly int IsGroundedHash = Animator.StringToHash("IsGrounded");
@@ -38,6 +48,11 @@ public class PlayerMovement : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+        }
 
         if (animator == null)
         {
@@ -74,8 +89,9 @@ public class PlayerMovement : MonoBehaviour
         }
 
         if (PauseMenuController.IsPaused ||
-    MemoryUIController.IsMemoryOpen ||
-    DialogueUIController.IsDialogueOpen)
+            MemoryUIController.IsMemoryOpen ||
+            DialogueUIController.IsDialogueOpen ||
+            DialogueManager.IsDialogueBusy)
         {
             horizontalInput = 0f;
             jumpRequested = false;
@@ -167,7 +183,10 @@ public class PlayerMovement : MonoBehaviour
             jumpForce
         );
 
-        if (animator != null)
+        hasBeenAirborne = true;
+        highestFallSpeed = 0f;
+
+        if (animator != null && HasAnimatorParameter(JumpHash))
         {
             animator.ResetTrigger(JumpHash);
             animator.SetTrigger(JumpHash);
@@ -190,6 +209,17 @@ public class PlayerMovement : MonoBehaviour
             groundLayer
         );
 
+        if (!isGrounded)
+        {
+            hasBeenAirborne = true;
+
+            if (rb != null)
+            {
+                float currentFallSpeed = Mathf.Max(0f, -rb.linearVelocity.y);
+                highestFallSpeed = Mathf.Max(highestFallSpeed, currentFallSpeed);
+            }
+        }
+
         if (isGrounded)
         {
             hasUsedDoubleJump = false;
@@ -197,12 +227,45 @@ public class PlayerMovement : MonoBehaviour
 
         if (!wasGrounded && isGrounded)
         {
-            if (animator != null)
+            if (animator != null && HasAnimatorParameter(LandHash))
             {
                 animator.ResetTrigger(LandHash);
                 animator.SetTrigger(LandHash);
             }
+
+            PlayLandingSound();
+
+            hasBeenAirborne = false;
+            highestFallSpeed = 0f;
         }
+    }
+
+    private void PlayLandingSound()
+    {
+        if (!hasBeenAirborne)
+        {
+            return;
+        }
+
+        if (Time.timeSinceLevelLoad < landingSoundStartDelay)
+        {
+            return;
+        }
+
+        if (highestFallSpeed < minimumLandingSpeed)
+        {
+            return;
+        }
+
+        if (audioSource == null || landingSound == null)
+        {
+            return;
+        }
+
+        audioSource.PlayOneShot(
+            landingSound,
+            landingSoundVolume
+        );
     }
 
     private void UpdateFacingDirection()
@@ -233,20 +296,47 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        animator.SetFloat(
-            SpeedHash,
-            Mathf.Abs(horizontalInput)
-        );
+        if (HasAnimatorParameter(SpeedHash))
+        {
+            animator.SetFloat(
+                SpeedHash,
+                Mathf.Abs(horizontalInput)
+            );
+        }
 
-        animator.SetBool(
-            IsGroundedHash,
-            isGrounded
-        );
+        if (HasAnimatorParameter(IsGroundedHash))
+        {
+            animator.SetBool(
+                IsGroundedHash,
+                isGrounded
+            );
+        }
 
-        animator.SetFloat(
-            VerticalVelocityHash,
-            rb.linearVelocity.y
-        );
+        if (HasAnimatorParameter(VerticalVelocityHash))
+        {
+            animator.SetFloat(
+                VerticalVelocityHash,
+                rb.linearVelocity.y
+            );
+        }
+    }
+
+    private bool HasAnimatorParameter(int parameterHash)
+    {
+        if (animator == null)
+        {
+            return false;
+        }
+
+        foreach (AnimatorControllerParameter parameter in animator.parameters)
+        {
+            if (parameter.nameHash == parameterHash)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void OnDrawGizmosSelected()

@@ -4,37 +4,33 @@ using UnityEngine.SceneManagement;
 
 public class PauseMenuController : MonoBehaviour
 {
-    [Header("UI")]
-    [SerializeField] private GameObject pauseCanvas;
-    [SerializeField] private GameObject pausePanel;
-    [SerializeField] private GameObject settingsPanel;
+    public static bool IsPaused { get; private set; }
 
-    [Header("Save")]
-    [SerializeField] private RoomSaveController roomSaveController;
+    [Header("UI")]
+    [SerializeField] private GameObject pauseMenuRoot;
+    [SerializeField] private GameObject settingsPanelRoot;
 
     [Header("Scenes")]
     [SerializeField] private string mainMenuSceneName = "MainMenu";
 
-    public static bool IsPaused { get; private set; }
-    private bool settingsOpen;
-
-    private void Start()
+    private void Awake()
     {
-        Time.timeScale = 1f;
         IsPaused = false;
-        settingsOpen = false;
+        Time.timeScale = 1f;
 
-        pauseCanvas.SetActive(false);
+        if (pauseMenuRoot != null)
+        {
+            pauseMenuRoot.SetActive(false);
+        }
+
+        if (settingsPanelRoot != null)
+        {
+            settingsPanelRoot.SetActive(false);
+        }
     }
 
     private void Update()
     {
-        if (MemoryUIController.IsMemoryOpen ||
-            DeathRespawnController.IsRespawning)
-        {
-            return;
-        }
-
         if (Keyboard.current == null)
         {
             return;
@@ -42,80 +38,127 @@ public class PauseMenuController : MonoBehaviour
 
         if (Keyboard.current.escapeKey.wasPressedThisFrame)
         {
-            HandleEscape();
+            if (DialogueUIController.IsDialogueOpen ||
+                DialogueManager.IsDialogueBusy)
+            {
+                return;
+            }
+
+            if (settingsPanelRoot != null && settingsPanelRoot.activeSelf)
+            {
+                CloseSettings();
+                return;
+            }
+
+            TogglePause();
         }
     }
 
-    private void HandleEscape()
+    public void TogglePause()
     {
-        if (!IsPaused)
+        if (IsPaused)
+        {
+            ResumeGame();
+        }
+        else
         {
             PauseGame();
-            return;
         }
-
-        if (settingsOpen)
-        {
-            CloseSettings();
-            return;
-        }
-
-        ResumeGame();
     }
 
     public void PauseGame()
     {
         IsPaused = true;
-        settingsOpen = false;
-
-        pauseCanvas.SetActive(true);
-        pausePanel.SetActive(true);
-        settingsPanel.SetActive(false);
-
         Time.timeScale = 0f;
+
+        if (pauseMenuRoot != null)
+        {
+            pauseMenuRoot.SetActive(true);
+        }
+
+        if (settingsPanelRoot != null)
+        {
+            settingsPanelRoot.SetActive(false);
+        }
+
+        Debug.Log("Game paused.");
     }
 
     public void ResumeGame()
     {
         IsPaused = false;
-        settingsOpen = false;
-
         Time.timeScale = 1f;
 
-        pauseCanvas.SetActive(false);
+        if (pauseMenuRoot != null)
+        {
+            pauseMenuRoot.SetActive(false);
+        }
+
+        if (settingsPanelRoot != null)
+        {
+            settingsPanelRoot.SetActive(false);
+        }
+
+        Debug.Log("Game resumed.");
     }
 
     public void OpenSettings()
     {
-        settingsOpen = true;
+        if (!IsPaused)
+        {
+            PauseGame();
+        }
 
-        pausePanel.SetActive(false);
-        settingsPanel.SetActive(true);
+        if (settingsPanelRoot != null)
+        {
+            settingsPanelRoot.SetActive(true);
+        }
+
+        Debug.Log("Pause settings opened.");
     }
 
     public void CloseSettings()
     {
-        settingsOpen = false;
+        if (settingsPanelRoot != null)
+        {
+            settingsPanelRoot.SetActive(false);
+        }
 
-        settingsPanel.SetActive(false);
-        pausePanel.SetActive(true);
+        Debug.Log("Pause settings closed.");
+    }
+
+    public void ReturnToMainMenu()
+    {
+        GoToMainMenu();
     }
 
     public void BackToMainMenu()
     {
-        if (roomSaveController != null)
-        {
-            roomSaveController.SaveGame();
-        }
+        GoToMainMenu();
+    }
 
+    private void GoToMainMenu()
+    {
         IsPaused = false;
         Time.timeScale = 1f;
+
+        if (pauseMenuRoot != null)
+        {
+            pauseMenuRoot.SetActive(false);
+        }
+
+        if (settingsPanelRoot != null)
+        {
+            settingsPanelRoot.SetActive(false);
+        }
+
+        SceneTransitionContext.Clear();
 
         SceneManager.LoadScene(mainMenuSceneName);
     }
 
-    private void OnDestroy()
+    public void QuitGame()
     {
-        Time.timeScale = 1f;
+        Application.Quit();
     }
 }

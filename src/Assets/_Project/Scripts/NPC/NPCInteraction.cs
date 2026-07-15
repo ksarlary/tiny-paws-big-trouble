@@ -2,8 +2,11 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class OldCatNPC : MonoBehaviour
+public class NPCInteraction : MonoBehaviour
 {
+    [Header("NPC Identity")]
+    [SerializeField] private string npcName = "Bird Tarot Reader";
+
     [Header("Sprites")]
     [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private Sprite frontIdleSprite;
@@ -11,39 +14,12 @@ public class OldCatNPC : MonoBehaviour
     [SerializeField] private Sprite speakingSideSpriteB;
 
     [Header("Facing")]
-    [Tooltip("Enable this if the Old Cat side talking sprites naturally face right in the PNG.")]
+    [Tooltip("Enable this if the side talking sprites naturally face right in the PNG.")]
     [SerializeField] private bool sideSpritesFaceRightByDefault = true;
 
     [Header("Interaction")]
     [SerializeField] private GameObject dialogIcon;
-    [SerializeField] private DialogueUIController dialogueUI;
-    [SerializeField] private PlayerAbilities playerAbilities;
-
-    [Header("Dialogue")]
-    [SerializeField] private string speakerName = "Old Cat";
-
-    [TextArea]
-    [SerializeField] private string[] firstDialogueLines =
-    {
-        "Wait, little one...",
-        "You carry the smell of the tunnels.",
-        "The mice brought you here, did they not?",
-        "Do not trust every mouse who smiles at you.",
-        "Some are frightened. Some are kind.",
-        "But some still serve the Mouse King.",
-        "If you want to survive, you must learn to reach higher places.",
-        "Feel the ground beneath your paws. Jump once...",
-        "Then trust yourself, and jump again.",
-        "You learned Double Jump. Press jump again while in the air."
-    };
-
-    [TextArea]
-    [SerializeField] private string[] repeatDialogueLines =
-    {
-        "Remember, little one...",
-        "The tunnels hide more than cheese and dust.",
-        "Use your new jump wisely."
-    };
+    [SerializeField] private DialogueManager dialogueManager;
 
     [Header("Speaking Animation")]
     [SerializeField] private float speakingSpriteSwapSpeed = 0.25f;
@@ -52,7 +28,7 @@ public class OldCatNPC : MonoBehaviour
     [SerializeField] private float interactionCooldownAfterDialogue = 0.4f;
 
     private bool playerNearby;
-    private bool isTalking;
+    private bool isSpeaking;
     private float nextAllowedInteractionTime;
 
     private Transform playerTransform;
@@ -80,12 +56,13 @@ public class OldCatNPC : MonoBehaviour
             return;
         }
 
-        if (isTalking)
+        if (isSpeaking)
         {
             return;
         }
 
-        if (DialogueUIController.IsDialogueOpen)
+        if (DialogueManager.IsDialogueBusy ||
+            DialogueUIController.IsDialogueOpen)
         {
             return;
         }
@@ -102,23 +79,38 @@ public class OldCatNPC : MonoBehaviour
 
         if (Keyboard.current.eKey.wasPressedThisFrame)
         {
-            StartOldCatDialogue();
+            Interact();
         }
     }
 
-    private void StartOldCatDialogue()
+    private void Interact()
     {
-        if (dialogueUI == null)
+        if (dialogueManager == null)
         {
             Debug.LogError(
-                "OldCatNPC: DialogueUIController is not assigned.",
+                "NPCInteraction: DialogueManager is not assigned.",
                 this
             );
 
             return;
         }
 
-        isTalking = true;
+        if (dialogIcon != null)
+        {
+            dialogIcon.SetActive(false);
+        }
+
+        FacePlayer();
+
+        dialogueManager.StartGeneratedDialogue(
+            npcName,
+            this
+        );
+    }
+
+    public void BeginSpeaking()
+    {
+        isSpeaking = true;
 
         if (dialogIcon != null)
         {
@@ -128,41 +120,15 @@ public class OldCatNPC : MonoBehaviour
         FacePlayer();
         StartSpeakingAnimation();
 
-        string[] linesToUse =
-            GameSaveManager.HasDoubleJump()
-                ? repeatDialogueLines
-                : firstDialogueLines;
-
-        dialogueUI.StartDialogue(
-            speakerName,
-            linesToUse,
-            OnDialogueFinished
-        );
-
-        Debug.Log("Old Cat dialogue started.");
+        Debug.Log($"{npcName} started speaking.");
     }
 
-    private void OnDialogueFinished()
+    public void EndSpeaking()
     {
         StopSpeakingAnimation();
         SetIdleSprite();
 
-        if (!GameSaveManager.HasDoubleJump())
-        {
-            if (playerAbilities != null)
-            {
-                playerAbilities.UnlockDoubleJump();
-            }
-            else
-            {
-                Debug.LogWarning(
-                    "OldCatNPC: PlayerAbilities is not assigned.",
-                    this
-                );
-            }
-        }
-
-        isTalking = false;
+        isSpeaking = false;
 
         nextAllowedInteractionTime =
             Time.unscaledTime + interactionCooldownAfterDialogue;
@@ -172,7 +138,7 @@ public class OldCatNPC : MonoBehaviour
             dialogIcon.SetActive(true);
         }
 
-        Debug.Log("Old Cat dialogue finished.");
+        Debug.Log($"{npcName} stopped speaking.");
     }
 
     private void FacePlayer()
@@ -187,14 +153,14 @@ public class OldCatNPC : MonoBehaviour
 
         if (sideSpritesFaceRightByDefault)
         {
-            // Side sprites naturally face right.
+            // Sprite naturally faces right.
             // Player on right = no flip.
             // Player on left = flip.
             spriteRenderer.flipX = !playerIsOnRight;
         }
         else
         {
-            // Side sprites naturally face left.
+            // Sprite naturally faces left.
             // Player on right = flip.
             // Player on left = no flip.
             spriteRenderer.flipX = playerIsOnRight;
@@ -234,7 +200,7 @@ public class OldCatNPC : MonoBehaviour
     {
         bool useFirstSprite = true;
 
-        while (isTalking)
+        while (isSpeaking)
         {
             if (spriteRenderer != null)
             {
@@ -264,12 +230,7 @@ public class OldCatNPC : MonoBehaviour
         playerNearby = true;
         playerTransform = other.transform;
 
-        if (playerAbilities == null)
-        {
-            playerAbilities = other.GetComponent<PlayerAbilities>();
-        }
-
-        if (dialogIcon != null && !isTalking)
+        if (dialogIcon != null && !isSpeaking)
         {
             dialogIcon.SetActive(true);
         }

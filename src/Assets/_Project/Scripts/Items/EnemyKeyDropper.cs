@@ -11,7 +11,7 @@ public class EnemyKeyDropper : MonoBehaviour
     [SerializeField] private Vector3 dropOffset =
         new Vector3(0f, 0.6f, 0f);
 
-    private bool droppedThisScene;
+    private GameObject spawnedKeyInstance;
 
     private void Awake()
     {
@@ -39,18 +39,21 @@ public class EnemyKeyDropper : MonoBehaviour
 
     private void DropKey(Vector3 corpsePosition)
     {
-        if (droppedThisScene)
-        {
-            return;
-        }
-
         if (GameSaveManager.HasRoom03Key())
         {
+            Debug.Log("Room 3 key already collected. No key drop.");
             return;
         }
 
-        if (GameSaveManager.WasRoom03KeyDropped())
+        if (spawnedKeyInstance != null)
         {
+            Debug.Log("Room 3 key is already spawned. No duplicate key drop.");
+            return;
+        }
+
+        if (KeyPickup.Room03KeyExistsInScene)
+        {
+            Debug.Log("A Room 3 key already exists in the scene. No duplicate key drop.");
             return;
         }
 
@@ -64,23 +67,20 @@ public class EnemyKeyDropper : MonoBehaviour
             return;
         }
 
-        droppedThisScene = true;
-        GameSaveManager.MarkRoom03KeyDropped();
-
         Vector3 spawnPosition =
             corpsePosition + dropOffset;
 
-        GameObject keyInstance =
+        spawnedKeyInstance =
             Instantiate(
                 keyPrefab,
                 spawnPosition,
                 Quaternion.identity
             );
 
-        keyInstance.SetActive(true);
+        spawnedKeyInstance.SetActive(true);
 
         KeyPickup keyPickup =
-            keyInstance.GetComponent<KeyPickup>();
+            spawnedKeyInstance.GetComponent<KeyPickup>();
 
         if (keyPickup != null)
         {

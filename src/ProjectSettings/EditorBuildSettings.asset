@@ -32,5 +32,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_Project/Scenes/Room04_OldCatShelter.unity
     guid: 8eccb4d0611a1c344a537e99861eb04b
+  - enabled: 1
+    path: Assets/_Project/Scenes/Room05_SecretRoom.unity
+    guid: 350605d803887d24a89c407b36f9aa68
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}

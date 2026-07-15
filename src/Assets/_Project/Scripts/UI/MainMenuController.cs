@@ -4,73 +4,113 @@ using UnityEngine.UI;
 
 public class MainMenuController : MonoBehaviour
 {
-    [Header("Panels")]
-    [SerializeField] private GameObject settingsPanel;
-
     [Header("Buttons")]
     [SerializeField] private Button continueButton;
 
+    [Header("Panels")]
+    [SerializeField] private GameObject mainButtonsRoot;
+    [SerializeField] private GameObject settingsPanelRoot;
+
     [Header("Scenes")]
-    [SerializeField] private string fallbackGameplaySceneName = "PrototypeRoom";
+    [SerializeField] private string firstRoomSceneName = "Room01_Prison";
 
     private void Start()
     {
-        UpdateContinueButtonState();
+        ShowMainButtons();
+        RefreshContinueButton();
     }
 
-    public void OpenSettings()
+    private void OnEnable()
     {
-        if (settingsPanel != null)
-        {
-            settingsPanel.SetActive(true);
-        }
+        RefreshContinueButton();
     }
 
-    public void CloseSettings()
+    private void RefreshContinueButton()
     {
-        if (settingsPanel != null)
+        if (continueButton == null)
         {
-            settingsPanel.SetActive(false);
+            Debug.LogWarning("MainMenuController: Continue button is not assigned.", this);
+            return;
         }
+
+        GameSaveData data = GameSaveManager.GetSaveData();
+
+        bool hasValidSave =
+            data != null &&
+            !string.IsNullOrEmpty(data.sceneName);
+
+        continueButton.interactable = hasValidSave;
+
+        Debug.Log($"Continue button state: {hasValidSave}");
+    }
+
+    public void StartNewGame()
+    {
+        SaveSystem.DeleteSave();
+
+        SceneTransitionContext.Clear();
+
+        SceneManager.LoadScene(firstRoomSceneName);
     }
 
     public void ContinueGame()
     {
-        if (!GameSaveManager.HasSave())
+        GameSaveData data = GameSaveManager.GetSaveData();
+
+        if (data == null || string.IsNullOrEmpty(data.sceneName))
         {
-            Debug.Log("No save found.");
+            SceneManager.LoadScene(firstRoomSceneName);
             return;
         }
 
-        string sceneToLoad = GameSaveManager.GetCurrentScene(fallbackGameplaySceneName);
+        SceneTransitionContext.Clear();
 
-        if (!Application.CanStreamedLevelBeLoaded(sceneToLoad))
+        SceneManager.LoadScene(data.sceneName);
+    }
+
+    public void OpenSettings()
+    {
+        if (mainButtonsRoot != null)
         {
-            Debug.LogError(
-                "Cannot continue. Scene is missing from Build Settings: " + sceneToLoad
-            );
-            return;
+            mainButtonsRoot.SetActive(false);
         }
 
-        SceneManager.LoadScene(sceneToLoad);
+        if (settingsPanelRoot != null)
+        {
+            settingsPanelRoot.SetActive(true);
+        }
+
+        Debug.Log("Main menu settings opened.");
+    }
+
+    public void CloseSettings()
+    {
+        ShowMainButtons();
+
+        Debug.Log("Main menu settings closed.");
+    }
+
+    private void ShowMainButtons()
+    {
+        if (mainButtonsRoot != null)
+        {
+            mainButtonsRoot.SetActive(true);
+        }
+
+        if (settingsPanelRoot != null)
+        {
+            settingsPanelRoot.SetActive(false);
+        }
     }
 
     public void QuitGame()
     {
-        Debug.Log("Quit game requested.");
+        Debug.Log("Quit game.");
+
+        Application.Quit();
 
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
-#else
-        Application.Quit();
 #endif
-    }
-
-    private void UpdateContinueButtonState()
-    {
-        if (continueButton != null)
-        {
-            continueButton.interactable = GameSaveManager.HasSave();
-        }
     }
 }

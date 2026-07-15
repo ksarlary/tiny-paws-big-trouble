@@ -36,6 +36,11 @@ public class MouseGuardAI : MonoBehaviour
     private float attackPointBaseX;
     [SerializeField] private LayerMask playerLayer;
 
+    [Header("Audio")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip attackSound;
+    [SerializeField] private float attackSoundVolume = 1f;
+
     private Rigidbody2D rb;
     private Transform player;
 
@@ -63,6 +68,11 @@ public class MouseGuardAI : MonoBehaviour
 
     private void Awake()
     {
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+        }
+
         rb = GetComponent<Rigidbody2D>();
 
         if (animator == null)
@@ -235,11 +245,24 @@ public class MouseGuardAI : MonoBehaviour
         isAttacking = true;
 
         StopHorizontalMovement();
-
+        PlayAttackSound();
         if (animator != null)
         {
             animator.SetTrigger(AttackHash);
         }
+    }
+
+    private void PlayAttackSound()
+    {
+        if (audioSource == null || attackSound == null)
+        {
+            return;
+        }
+
+        audioSource.PlayOneShot(
+            attackSound,
+            attackSoundVolume
+        );
     }
 
     /// <summary>
