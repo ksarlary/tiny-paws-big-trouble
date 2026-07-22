@@ -20,11 +20,31 @@ public class RoomSaveController : MonoBehaviour
 
     private void Start()
     {
-        LoadOrCreateInitialSave();
+        GameSaveData data = SaveSystem.Load();
 
-        autosaveCoroutine = StartCoroutine(
-            AutosaveRoutine()
-        );
+        if (SceneTransitionContext.SpawnedFromEntryPoint)
+        {
+            Debug.Log(
+                "Entry-point spawn detected. " +
+                "Skipping saved Player position restore."
+            );
+
+            SceneTransitionContext.SpawnedFromEntryPoint = false;
+
+            SaveGame();
+
+            return;
+        }
+
+        if (data != null &&
+            data.sceneName == SceneManager.GetActiveScene().name)
+        {
+            LoadGameState(data);
+        }
+        else
+        {
+            SaveGame();
+        }
     }
 
     private void LoadOrCreateInitialSave()

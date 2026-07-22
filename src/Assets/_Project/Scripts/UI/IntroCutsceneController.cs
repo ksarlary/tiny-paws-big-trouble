@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.Video;
 
@@ -20,9 +21,39 @@ public class IntroCutsceneController : MonoBehaviour
     [SerializeField] private float firstFrameHoldDuration = 0.4f;
     [SerializeField] private float firstFrameFadeOutDuration = 0.5f;
 
+    [Header("Skip")]
+    [SerializeField] private bool allowSkip = true;
+    [SerializeField] private Key skipKey = Key.E;
+
+    private bool hasFinished;
+
     private void Start()
     {
         StartCoroutine(PlayIntroRoutine());
+    }
+
+    private void Update()
+    {
+        if (!allowSkip)
+        {
+            return;
+        }
+
+        if (hasFinished)
+        {
+            return;
+        }
+
+        if (Keyboard.current == null)
+        {
+            return;
+        }
+
+        if (Keyboard.current[skipKey].wasPressedThisFrame)
+        {
+            Debug.Log("Intro cutscene skipped.");
+            FinishIntro();
+        }
     }
 
     private IEnumerator PlayIntroRoutine()
@@ -42,6 +73,11 @@ public class IntroCutsceneController : MonoBehaviour
 
         while (timer < logoFadeDuration)
         {
+            if (hasFinished)
+            {
+                yield break;
+            }
+
             timer += Time.deltaTime;
             float progress = Mathf.Clamp01(timer / logoFadeDuration);
 
@@ -56,6 +92,11 @@ public class IntroCutsceneController : MonoBehaviour
 
         yield return new WaitForSeconds(firstFrameHoldDuration);
 
+        if (hasFinished)
+        {
+            yield break;
+        }
+
         if (videoPlayer != null)
         {
             videoPlayer.Play();
@@ -65,6 +106,11 @@ public class IntroCutsceneController : MonoBehaviour
 
         while (timer < firstFrameFadeOutDuration)
         {
+            if (hasFinished)
+            {
+                yield break;
+            }
+
             timer += Time.deltaTime;
             float progress = Mathf.Clamp01(timer / firstFrameFadeOutDuration);
 
@@ -78,8 +124,27 @@ public class IntroCutsceneController : MonoBehaviour
 
     private void OnVideoFinished(VideoPlayer player)
     {
+        FinishIntro();
+    }
+
+    private void FinishIntro()
+    {
+        if (hasFinished)
+        {
+            return;
+        }
+
+        hasFinished = true;
+
+        if (videoPlayer != null)
+        {
+            videoPlayer.Stop();
+        }
+
         GameSaveManager.MarkIntroSeen();
         GameSaveManager.SaveCurrentScene(nextSceneName);
+
+        SceneTransitionContext.Clear();
 
         SceneManager.LoadScene(nextSceneName);
     }

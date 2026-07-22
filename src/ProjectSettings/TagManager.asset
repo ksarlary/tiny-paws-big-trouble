@@ -13,8 +13,8 @@ TagManager:
   - UI
   - Ground
   - CameraBounds
-  - 
-  - 
+  - Enemy
+  - Characters
   - 
   - 
   - 
@@ -52,6 +52,12 @@ TagManager:
     locked: 0
   - name: Foreground
     uniqueID: 1540391933
+    locked: 0
+  - name: Enemy
+    uniqueID: 2621653461
+    locked: 0
+  - name: Characters
+    uniqueID: 1182254253
     locked: 0
   m_RenderingLayers:
   - Default

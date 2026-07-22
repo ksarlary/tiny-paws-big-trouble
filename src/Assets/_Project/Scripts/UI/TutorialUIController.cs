@@ -4,67 +4,92 @@ using UnityEngine;
 
 public class TutorialUIController : MonoBehaviour
 {
-    [Header("UI References")]
-    [SerializeField] private CanvasGroup messageGroup;
+    [Header("References")]
     [SerializeField] private TMP_Text messageText;
+    [SerializeField] private CanvasGroup messageCanvasGroup;
 
-    [Header("Timing")]
-    [SerializeField] private float fadeDuration = 0.3f;
-    [SerializeField] private float defaultDisplayDuration = 3f;
+    [Header("Animation")]
+    [SerializeField] private float fadeDuration = 0.2f;
 
-    private Coroutine currentMessageRoutine;
+    private Coroutine currentRoutine;
 
-    public void ShowMessage(string message)
+    private void Awake()
     {
-        ShowMessage(message, defaultDisplayDuration);
+        messageCanvasGroup.alpha = 0f;
+        messageCanvasGroup.interactable = false;
+        messageCanvasGroup.blocksRaycasts = false;
     }
 
-    public void ShowMessage(string message, float duration)
+    public void ShowPersistentMessage(string message)
     {
-        if (currentMessageRoutine != null)
-        {
-            StopCoroutine(currentMessageRoutine);
-        }
+        StopCurrentRoutine();
 
-        currentMessageRoutine = StartCoroutine(
-            ShowMessageRoutine(message, duration)
+        messageText.text = message;
+        currentRoutine = StartCoroutine(FadeTo(1f));
+    }
+
+    public void ShowTimedMessage(string message, float duration = 2f)
+    {
+        StopCurrentRoutine();
+
+        messageText.text = message;
+        currentRoutine = StartCoroutine(
+            ShowTimedMessageRoutine(duration)
         );
     }
 
-    private IEnumerator ShowMessageRoutine(string message, float duration)
+    public void HideMessage()
     {
-        messageText.text = message;
-
-        yield return FadeMessage(0f, 1f);
-
-        yield return new WaitForSeconds(duration);
-
-        yield return FadeMessage(1f, 0f);
-
-        currentMessageRoutine = null;
+        StopCurrentRoutine();
+        currentRoutine = StartCoroutine(FadeTo(0f));
     }
 
-    private IEnumerator FadeMessage(float startAlpha, float endAlpha)
+    private IEnumerator ShowTimedMessageRoutine(float duration)
     {
-        float timer = 0f;
+        yield return FadeTo(1f);
+        yield return new WaitForSecondsRealtime(duration);
+        yield return FadeTo(0f);
 
-        while (timer < fadeDuration)
+        currentRoutine = null;
+    }
+
+    private IEnumerator FadeTo(float targetAlpha)
+    {
+        float startAlpha = messageCanvasGroup.alpha;
+        float elapsed = 0f;
+
+        while (elapsed < fadeDuration)
         {
-            timer += Time.deltaTime;
+            elapsed += Time.unscaledDeltaTime;
 
-            float progress = Mathf.Clamp01(
-                timer / fadeDuration
-            );
-
-            messageGroup.alpha = Mathf.Lerp(
+            messageCanvasGroup.alpha = Mathf.Lerp(
                 startAlpha,
-                endAlpha,
-                progress
+                targetAlpha,
+                elapsed / fadeDuration
             );
 
             yield return null;
         }
 
-        messageGroup.alpha = endAlpha;
+        messageCanvasGroup.alpha = targetAlpha;
+    }
+
+    private void StopCurrentRoutine()
+    {
+        if (currentRoutine == null)
+            return;
+
+        StopCoroutine(currentRoutine);
+        currentRoutine = null;
+    }
+
+    public void ShowMessage(string message)
+    {
+        ShowTimedMessage(message, 2.5f);
+    }
+
+    public void ShowMessage(string message, float duration)
+    {
+        ShowTimedMessage(message, duration);
     }
 }

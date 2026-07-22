@@ -89,4 +89,95 @@ public static class GameSaveManager
     {
         return SaveSystem.Load() ?? new GameSaveData();
     }
+
+    public static bool HasMemory(string memoryId)
+    {
+        GameSaveData data = SaveSystem.Load();
+
+        if (data == null ||
+            data.collectedMemoryIds == null)
+        {
+            return false;
+        }
+
+        return data.collectedMemoryIds.Contains(memoryId);
+    }
+
+    public static void CollectMemory(string memoryId)
+    {
+        GameSaveData data = LoadOrCreate();
+
+        if (data.collectedMemoryIds == null)
+        {
+            data.collectedMemoryIds =
+                new System.Collections.Generic.List<string>();
+        }
+
+        if (!data.collectedMemoryIds.Contains(memoryId))
+        {
+            data.collectedMemoryIds.Add(memoryId);
+        }
+
+        SaveSystem.Save(data);
+    }
+
+    public static void ActivateCheckpoint(
+    string sceneName,
+    string entryPointId,
+    int fullHealth)
+    {
+        GameSaveData data = LoadOrCreate();
+
+        data.hasCheckpoint = true;
+        data.checkpointSceneName = sceneName;
+        data.checkpointEntryPointId = entryPointId;
+        data.currentHealth = fullHealth;
+
+        SaveSystem.Save(data);
+    }
+
+    public static GameSaveData GetSaveData()
+    {
+        return LoadOrCreate();
+    }
+
+    public static bool HasRoom03Key()
+    {
+        GameSaveData data = LoadOrCreate();
+        return data.room03KeyCollected;
+    }
+
+    public static void CollectRoom03Key()
+    {
+        GameSaveData data = LoadOrCreate();
+
+        data.room03KeyDropped = true;
+        data.room03KeyCollected = true;
+
+        SaveSystem.Save(data);
+
+        Debug.Log("Room 3 key collected.");
+    }
+
+    public static bool HasDoubleJump()
+    {
+        GameSaveData data = LoadOrCreate();
+        return data.hasDoubleJump;
+    }
+
+    public static void UnlockDoubleJump()
+    {
+        GameSaveData data = LoadOrCreate();
+
+        if (data.hasDoubleJump)
+        {
+            return;
+        }
+
+        data.hasDoubleJump = true;
+
+        SaveSystem.Save(data);
+
+        Debug.Log("Double Jump saved as unlocked.");
+    }
 }
