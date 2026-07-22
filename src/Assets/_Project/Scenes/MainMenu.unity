@@ -2758,9 +2758,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 222606fa08a7b4c41ac16e50a30c61a0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MainMenuController
-  settingsPanel: {fileID: 2216306146206819396}
   continueButton: {fileID: 2065052668}
-  fallbackGameplaySceneName: PrototypeRoom
+  mainButtonsRoot: {fileID: 1604206690}
+  settingsPanelRoot: {fileID: 2216306146206819396}
+  firstRoomSceneName: Room01_Prison
 --- !u!1 &1448767288
 GameObject:
   m_ObjectHideFlags: 0
